@@ -27,7 +27,7 @@ def set_seeds(seed=115):
 # ==============================
 # Training Function
 # ==============================
-def train_UDFR-Net(args, save_model=True):
+def train_UDFR_Net(args, save_model=True):
     set_seeds()
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print(f"Using device: {device}")
@@ -133,5 +133,5 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    train_UDFR-Net(args, save_model=True)
+    train_UDFR_Net(args, save_model=True)
 
