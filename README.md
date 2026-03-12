@@ -24,26 +24,18 @@ producing dense 3D point clouds (.ply) of polyurethane cutting edges [9]. It con
 point cloud files, and serves as a benchmark for 3D anomaly detection.
 
 ## Code
-CMDR-IAD provides scripts for **training** and **inference** of cross-modal mapping and dual-branch reconstruction networks for industrial anomaly detection.
-
-To train CMDR-IAD, use the train.py script.
-To Test CMDR-IAD. use the inference.py script.
-
-
-Train and test options
-
-`--dataset_path` : Path to the root directory of the MVTec 3D-AD dataset.
-
-`--checkpoint_savepath` : Directory where trained checkpoints are saved (training) or read from (inference) (default: `./checkpoints/CMDR_IAD_checkpoints`).
-
-`--class_name` : Object category to train on or to test on .
-
-`--epochs_no` : Number of epochs.
-
-`--batch_size` : Batch size.
-
-Each object category is trained independently, and the resulting checkpoints are stored per class for inference.
-
+To train UDFR-Net, use
+python UDFR_Net_Train.py \
+    --dataset_path ./dataset/polyurethane_cuts \
+    --checkpoint_savepath ./checkpoints \
+    --class_name "polyurethane_cuts" \
+    --epochs_no 50 \
+    --batch_size 4
+To test UDFR-Net, use
+python UDFR_Net_Inference.py \
+    --dataset_path ./dataset/polyurethane_cuts \
+    --checkpoint_path ./checkpoints/polyurethane_cuts_50ep_4bs.pth \
+    --result_path ./results
 ## Contacts
 For questions, please send an email to <radia.daci@isasi.cnr.it>. .
 
