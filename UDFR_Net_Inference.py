@@ -5,6 +5,7 @@ from utils.metrics_utils import calculate_au_pro
 from dataloader import TestSet
 from Featrec3d_models.PCFeatureEncoder_9216 import PointCloudFeatures
 from Featrec3d_models.PCFeaturDecoder import  FeatureDecoder_9216
+from sklearn.metrics import roc_auc_score
 
 
 
@@ -18,7 +19,7 @@ def set_seeds(seed=42):
 
 
 # -------------------- Testing Function --------------------
-def test_UDFR-Net(args):
+def test_UDFR_Net(args):
     set_seeds()
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -47,21 +48,15 @@ def test_UDFR-Net(args):
     gts, preds = [], []
     image_labels, pixel_labels = [], []
     image_scores, pixel_scores = [], []
-    total_time = 0.0
-    total_frames = 0
-    max_memory = 0.0
     if torch.cuda.is_available():
         torch.cuda.reset_peak_memory_stats(device)
 
     print("\n🚀 Running inference...")
     for pc_img, label, gt_mask in tqdm(test_loader, desc="Testing"):
         
-
         pc_img = pc_img.to(device)
         gt_mask = gt_mask.squeeze(0).numpy()
-        torch.cuda.synchronize(device)
-        start_time = time.time()
-
+        
         with torch.no_grad():
             xyz_patch = feature_extractor.get_features_maps(pc_img).unsqueeze(0)
             pred = model(xyz_patch)
@@ -86,17 +81,7 @@ def test_UDFR-Net(args):
             # Normalize
             norm = torch.sqrt(cos_map[cos_map != 0].mean())
             norm_map = cos_map / (norm + 1e-6)
-        torch.cuda.synchronize(device)
-        end_time = time.time()
-        total_time += (end_time - start_time)
-        total_frames += 1
-
-        # GPU memory
-        if torch.cuda.is_available():
-            current_peak = torch.cuda.max_memory_allocated(device) / (1024**2)  # MB
-            max_memory = max(max_memory, current_peak)
-
-
+        
         # Flatten for metrics
         pred_flat = norm_map.cpu().numpy().flatten()
         gt_flat = gt_mask.flatten()
@@ -107,10 +92,6 @@ def test_UDFR-Net(args):
         image_scores.append(pred_flat.max())
         pixel_labels.extend(gt_flat)
         pixel_scores.extend(pred_flat)
-        
-        
-
-
 
     # -------------------- Metrics --------------------
     print("\n📊 Calculating metrics...")
@@ -131,9 +112,6 @@ def test_UDFR-Net(args):
     image_auc = roc_auc_score(image_labels, image_scores)
     # -------------------- Image-level classification metrics --------------------
 
-    image_labels_np = np.array(image_labels)
-    image_scores_np = np.array(image_scores)
-
     print("\n✅ Results")
     print("AUPRO@30% | AUPRO@10% | AUPRO@5% | AUPRO@1% | P-AUROC | I-AUROC")
     print(f"  {au_pros[0]:.3f}   |   {au_pros[1]:.3f}   |   {au_pros[2]:.3f}  |   {au_pros[3]:.3f}  |   {pixel_auc:.3f} |   {image_auc:.3f}")
@@ -148,4 +126,4 @@ if __name__ == "__main__":
     parser.add_argument('--result_path', type=str, default='./results')
     args = parser.parse_args()
 
-    test_UDFR-Net(args)
+    test_UDFR_Net(args)
